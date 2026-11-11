@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-blue: #1f4e8c;
+  --color-brand-blueLight: #e8f0fa;
+  --color-brand-darkBg: #0e131a;
+  --color-brand-darkCard: #151c27;
+  --color-brand-darkBorder: #263242;
+  --color-brand-red: #b3261e;
+  --color-brand-footer: #0c1a2e;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
