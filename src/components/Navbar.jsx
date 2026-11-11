@@ -37,7 +37,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-40 bg-white dark:bg-brand-darkBg border-t-1 border-brand-blue border-b border-gray-200 dark:border-brand-darkBorder ">
+    <nav className="sticky top-0 z-40 bg-white dark:bg-brand-darkBg border-t-1 border-brand-blue border-b border-gray-200 dark:border-brand-darkBorder shadow-sm">
       <div className="max-w-[1180px] mx-auto px-3 sm:px-4 flex items-center justify-between">
         <div className="flex md:hidden w-full items-center justify-between h-14">
           <button
@@ -107,11 +107,7 @@ export default function Navbar() {
             )}
           </li>
 
-          <li className="ml-2">
-            <Link to="/newsletter" className="bg-brand-blue text-white px-3.5 py-1.5 rounded text-xs font-semibold hover:opacity-90 transition-opacity block">
-              Newsletter
-            </Link>
-          </li>
+         
           <li className="ml-1">
             <Link to="/search" className="bg-brand-blueLight dark:bg-brand-blue/20 text-brand-blue dark:text-blue-300 border border-gray-200 dark:border-brand-darkBorder px-3.5 py-1.5 rounded-full text-xs font-bold hover:bg-brand-blue hover:text-white transition-colors block">
               🔍 Search
