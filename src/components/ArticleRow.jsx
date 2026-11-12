@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ArticleRow({ article }) {
+  const { tCategory } = useLanguage();
+
   return (
     <Link
       to={`/article/${article.slug}`}
@@ -13,13 +16,18 @@ export default function ArticleRow({ article }) {
       />
       <span className="min-w-0">
         <span className="text-[10px] text-brand-blue dark:text-blue-400 font-bold uppercase">
-          {article.category}
+          {tCategory(article.categoryId, article.category)}
         </span>
         <span className="block font-serif text-base font-bold text-gray-900 dark:text-white group-hover:text-brand-blue">
           {article.title}
         </span>
         <span className="block text-xs text-gray-500 line-clamp-1">{article.subtitle}</span>
-        <span className="block text-[11px] text-gray-400 mt-1">{article.date} · {article.readTime}</span>
+        <span className="block text-[11px] text-gray-400 mt-1">
+          <time dateTime={article.publishedAt} title={article.date}>
+            {article.timeAgo || article.date}
+          </time>
+          {article.readTime ? ` · ${article.readTime}` : ''}
+        </span>
       </span>
     </Link>
   );

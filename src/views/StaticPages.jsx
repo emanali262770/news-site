@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const PAGE_DETAILS = {
@@ -11,7 +10,6 @@ const PAGE_DETAILS = {
 };
 
 export default function StaticPages({ type }) {
-  const [sent, setSent] = useState(false);
   const current = PAGE_DETAILS[type] ?? PAGE_DETAILS.about;
 
   return (
@@ -23,28 +21,7 @@ export default function StaticPages({ type }) {
       </header>
 
       {type === 'contact' ? (
-        <form onSubmit={(event) => { event.preventDefault(); setSent(true); }} className="space-y-4 text-xs">
-          {sent && (
-            <div role="status" className="p-3 bg-blue-50 dark:bg-brand-blue/20 text-brand-blue dark:text-blue-300 rounded border border-blue-200">
-              Inquiry submissions are currently in test mode. We have received your prompt.
-            </div>
-          )}
-          <div>
-            <label htmlFor="contact-name" className="block font-semibold mb-1 dark:text-gray-200">Full Name</label>
-            <input id="contact-name" required type="text" className="w-full border rounded p-2.5 dark:bg-brand-darkCard dark:border-brand-darkBorder dark:text-white" />
-          </div>
-          <div>
-            <label htmlFor="contact-email" className="block font-semibold mb-1 dark:text-gray-200">Email Address</label>
-            <input id="contact-email" required type="email" className="w-full border rounded p-2.5 dark:bg-brand-darkCard dark:border-brand-darkBorder dark:text-white" />
-          </div>
-          <div>
-            <label htmlFor="contact-message" className="block font-semibold mb-1 dark:text-gray-200">Message</label>
-            <textarea id="contact-message" required rows="5" className="w-full border rounded p-2.5 dark:bg-brand-darkCard dark:border-brand-darkBorder dark:text-white" />
-          </div>
-          <button type="submit" className="bg-brand-blue text-white px-6 py-2.5 rounded font-bold hover:bg-blue-600">
-            Send Message
-          </button>
-        </form>
+<p className="text-sm text-gray-500 dark:text-gray-400">Online contact submissions are not available yet.</p>
       ) : (
         <div className="text-sm text-gray-700 dark:text-gray-300 space-y-4 leading-relaxed">
           <p>
@@ -57,7 +34,7 @@ export default function StaticPages({ type }) {
             <p>We aim to verify information, distinguish reporting from opinion, correct significant errors, and represent affected communities fairly.</p>
           )}
           {type === 'privacy' && (
-            <p>This demonstration site does not send contact or newsletter form submissions to a server. Do not enter sensitive personal information.</p>
+            <p>Contact and newsletter submissions are not currently available. Admin access uses a session cookie.</p>
           )}
           {type === 'terms' && (
             <p>Articles are provided for general information. Please credit Christian Monitor News when quoting or sharing our reporting.</p>

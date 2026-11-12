@@ -1,68 +1,58 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import ArticleRow from '../components/ArticleRow';
-import { ARTICLES } from '../data/newsData';
+import Pagination from '../components/Pagination';
+import RequestState from '../components/RequestState';
+import useDebouncedValue from '../hooks/useDebouncedValue';
+import usePostList from '../hooks/usePostList';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SearchView() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const query = searchParams.get('q') ?? '';
-  const tags = ['Family Laws', 'Kasur', 'Quetta', 'Bishop', 'Malda'];
-  const normalizedQuery = query.toLowerCase().trim();
+  const [params, setParams] = useSearchParams();
+  const { t } = useLanguage();
+  const query = params.get('q') || '';
+  const search = useDebouncedValue(query);
+  const page = Math.max(1, Number(params.get('page')) || 1);
+  const { posts, pagination, loading, error, retry } = usePostList({ search, page });
+  const waiting = query !== search;
 
-  const handleQueryChange = (value) => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (value) {
-      nextParams.set('q', value);
-    } else {
-      nextParams.delete('q');
-    }
-    setSearchParams(nextParams, { replace: true });
-  };
-
-  const filtered = ARTICLES.filter((article) => (
-    `${article.title} ${article.subtitle} ${article.category}`.toLowerCase().includes(normalizedQuery)
-  ));
+  function updateQuery(value) {
+    const next = new URLSearchParams(params);
+    value ? next.set('q', value) : next.delete('q');
+    next.delete('page');
+    setParams(next, { replace: true });
+  }
 
   return (
-    <div className="max-w-[850px] mx-auto px-4 py-8">
-      <Link to="/" className="text-brand-blue dark:text-blue-400 text-xs font-bold mb-4 inline-block">
-        ← Back to Homepage
+    <section className="mx-auto max-w-[850px] px-4 py-8">
+      <Link to="/" className="mb-4 inline-block text-sm font-semibold text-brand-blue dark:text-blue-400">
+        {t('backToHome')}
       </Link>
-      <h1 className="font-serif text-3xl font-bold text-gray-900 dark:text-white mb-2">Search News &amp; Reports</h1>
-      <p className="text-xs text-gray-500 mb-6">Explore verified investigative articles and field reports.</p>
-
+      <h1 className="mb-6 font-serif text-3xl font-bold">{t('search')}</h1>
       <input
         type="search"
+        aria-label={t('searchAria')}
         value={query}
-        onChange={(event) => handleQueryChange(event.target.value)}
-        placeholder="Type keywords: e.g. Kasur, Quetta, Family Law..."
-        aria-label="Search articles"
-        className="w-full border-2 border-gray-300 dark:border-brand-darkBorder rounded-lg p-3 text-sm dark:bg-brand-darkCard dark:text-white focus:outline-none focus:border-brand-blue mb-3"
+        onChange={(event) => updateQuery(event.target.value)}
+        placeholder={t('searchPlaceholder')}
+        className="mb-6 w-full rounded-lg border border-gray-300 bg-white p-3 outline-none focus:border-brand-blue dark:border-brand-darkBorder dark:bg-brand-darkCard"
       />
-
-      <div className="flex flex-wrap gap-2 mb-8">
-        <span className="text-xs text-gray-400 font-semibold py-1">Popular searches:</span>
-        {tags.map((tag) => (
-          <button
-            type="button"
-            key={tag}
-            onClick={() => handleQueryChange(tag)}
-            className="text-xs bg-gray-100 dark:bg-brand-darkCard border border-gray-300 dark:border-brand-darkBorder px-3 py-1 rounded-full text-gray-700 dark:text-gray-300 hover:border-brand-blue"
-          >
-            {tag}
-          </button>
-        ))}
-      </div>
-
-      <div className="divide-y divide-gray-200 dark:divide-brand-darkBorder">
-        {filtered.map((article) => (
-          <ArticleRow key={article.id} article={article} />
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-center py-10 text-gray-400 text-sm">
-            No matching articles found{query ? ` for "${query}"` : ''}.
-          </p>
-        )}
-      </div>
-    </div>
+      <RequestState loading={loading || waiting} error={waiting ? null : error} onRetry={retry} />
+      {!loading && !waiting && !error && (
+        <div className="divide-y divide-gray-200 dark:divide-brand-darkBorder">
+          {posts.map((post) => <ArticleRow key={post.id} article={post} />)}
+          {!posts.length && <p className="py-10 text-center text-gray-500">{t('noMatchingArticles')}</p>}
+        </div>
+      )}
+      {!waiting && (
+        <Pagination
+          pagination={pagination}
+          onPageChange={(nextPage) => {
+            const next = new URLSearchParams(params);
+            next.set('page', String(nextPage));
+            setParams(next);
+          }}
+        />
+      )}
+    </section>
   );
 }

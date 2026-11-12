@@ -1,112 +1,80 @@
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ARTICLES } from '../data/newsData';
+import { usePosts } from '../context/PostsContext';
+import { useLanguage } from '../context/LanguageContext';
+import useApiResource from '../hooks/useApiResource';
+import RequestState from '../components/RequestState';
+import { presentPost } from '../lib/api';
 
 export default function ArticleDetailView() {
   const { slug } = useParams();
-  const article = ARTICLES.find((item) => item.slug === slug);
+  const { version } = usePosts();
+  const { t, currentLang } = useLanguage();
+  const lang = currentLang?.code || 'en';
+  const { data, loading, error, retry } = useApiResource(
+    `/posts/${encodeURIComponent(slug)}?lang=${encodeURIComponent(lang)}`,
+    `${version}-${lang}`,
+  );
 
   useEffect(() => {
-    if (!article) return undefined;
-    const previousTitle = document.title;
-    document.title = `${article.title} | Christian Monitor News`;
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [article]);
+    if (!data) return;
+    const previous = document.title;
+    document.title = `${data.title} | Christian Monitor News`;
+    return () => { document.title = previous; };
+  }, [data]);
 
-  if (!article) {
+  if (error?.status === 404) {
     return (
-      <div className="max-w-[800px] mx-auto px-4 py-20 text-center">
-        <h1 className="font-serif text-3xl font-bold text-gray-900 dark:text-white mb-2">Article Not Found</h1>
-        <p className="text-gray-500 mb-6">The article you are looking for does not exist or has been moved.</p>
-        <Link to="/" className="bg-brand-blue text-white px-5 py-2 rounded text-sm font-bold">
-          ← Return to Homepage
-        </Link>
-      </div>
+      <section className="mx-auto max-w-[800px] px-4 py-20 text-center">
+        <h1 className="mb-4 font-serif text-3xl font-bold">{t('articleNotFound')}</h1>
+        <Link to="/" className="text-brand-blue dark:text-blue-400 font-semibold">{t('returnHome')}</Link>
+      </section>
     );
   }
 
-  const related = ARTICLES.filter((item) => item.id !== article.id).slice(0, 2);
+  if (loading || error) return <RequestState loading={loading} error={error} onRetry={retry} />;
+  if (!data) return null;
+  const article = presentPost(data);
+  const related = (data.relatedPosts || []).map(presentPost);
 
   return (
-    <div className="max-w-[1180px] mx-auto px-4 py-8">
-      <Link to="/" className="text-brand-blue dark:text-blue-400 text-sm font-bold mb-6 inline-flex items-center gap-1 hover:underline">
-        ← Back to Homepage
+    <section className="mx-auto max-w-[1180px] px-4 py-8">
+      <Link to="/" className="mb-6 inline-block text-sm font-semibold text-brand-blue dark:text-blue-400">
+        {t('backToHome')}
       </Link>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
         <article className="lg:col-span-2">
-          <span className="text-brand-blue dark:text-blue-400 text-xs font-bold uppercase tracking-widest">
-            {article.category}
-          </span>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-2 mb-4 leading-tight">
-            {article.title}
-          </h1>
-          <p className="text-gray-500 text-xs mb-6">
-            By {article.author} · Published: {article.date} · {article.readTime}
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-blue dark:text-blue-400">{article.category}</p>
+          <h1 className="mb-4 mt-2 font-serif text-3xl font-bold leading-tight sm:text-4xl">{article.title}</h1>
+          <p className="mb-6 text-xs text-gray-500">
+            {t('by')} {article.author} &middot;{' '}
+            <time dateTime={article.publishedAt} title={article.date}>
+              {article.timeAgo || article.date}
+            </time>
+            {article.readTime ? ` \u00b7 ${article.readTime}` : ''}
           </p>
-
-          <div
-            role="img"
-            aria-label={article.caption}
-            className="w-full h-72 sm:h-[420px] rounded-lg bg-cover bg-center mb-3 bg-gray-200 dark:bg-gray-800"
-            style={{ backgroundImage: `url(${article.image})` }}
-          />
-          <p className="text-xs text-gray-500 italic border-b border-gray-200 dark:border-brand-darkBorder pb-4 mb-8">
-            {article.caption}
-          </p>
-
-          <div className="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 space-y-5 text-base sm:text-lg leading-relaxed font-sans">
-            {article.paragraphs?.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-            {article.quote && (
-              <blockquote className="border-l-4 border-brand-blue bg-gray-50 dark:bg-brand-darkCard pl-6 py-4 my-8 font-serif italic text-xl text-brand-blue dark:text-blue-300">
-                “{article.quote}”
-              </blockquote>
-            )}
-          </div>
+          {article.image && <img src={article.image} alt={article.imageAlt || ''} className="mb-3 max-h-[520px] w-full rounded-lg object-cover" />}
+          {article.caption && <p className="mb-8 border-b border-gray-200 pb-4 text-xs italic text-gray-500 dark:border-brand-darkBorder">{article.caption}</p>}
+          <div className="mt-6 whitespace-pre-wrap text-base leading-relaxed text-gray-800 sm:text-lg dark:text-gray-200">{article.content}</div>
         </article>
-
-        <aside className="space-y-6">
-          {article.factsheet && (
-            <div className="bg-gray-50 dark:bg-brand-darkCard border border-gray-200 dark:border-brand-darkBorder p-5 rounded-lg">
-              <h2 className="font-serif font-bold text-gray-900 dark:text-white text-base mb-3 border-b border-gray-200 dark:border-brand-darkBorder pb-2">
-                Case / Incident Factsheet
-              </h2>
-              <div className="space-y-2.5 text-xs">
-                {Object.entries(article.factsheet).map(([key, value]) => (
-                  <div key={key} className="flex justify-between gap-2 border-b border-gray-100 dark:border-brand-darkBorder/30 pb-1.5">
-                    <span className="font-semibold text-gray-600 dark:text-gray-400">{key}:</span>
-                    <span className="text-gray-900 dark:text-gray-100 text-right">{value}</span>
-                  </div>
+        {related.length > 0 && (
+          <aside>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-brand-darkBorder dark:bg-brand-darkCard">
+              <h2 className="mb-4 font-serif font-bold">{t('relatedCoverage')}</h2>
+              <div className="space-y-4">
+                {related.map((post) => (
+                  <Link key={post.id} to={`/article/${post.slug}`} className="block text-sm font-semibold hover:text-brand-blue dark:hover:text-blue-400">
+                    {post.title}
+                    <span className="mt-1 block text-xs font-normal text-gray-500">
+                      <time dateTime={post.publishedAt} title={post.date}>{post.timeAgo || post.date}</time>
+                    </span>
+                  </Link>
                 ))}
               </div>
             </div>
-          )}
-
-          <div className="bg-gray-50 dark:bg-brand-darkCard border border-gray-200 dark:border-brand-darkBorder p-5 rounded-lg">
-            <h2 className="font-serif font-bold text-gray-900 dark:text-white text-base mb-3">
-              Related Coverage
-            </h2>
-            <div className="space-y-3">
-              {related.map((item) => (
-                <Link
-                  key={item.id}
-                  to={`/article/${item.slug}`}
-                  className="block hover:text-brand-blue group"
-                >
-                  <span className="block text-xs font-bold text-gray-800 dark:text-gray-200 leading-snug group-hover:text-brand-blue">
-                    {item.title}
-                  </span>
-                  <span className="text-[10px] text-gray-400">{item.date}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </aside>
+          </aside>
+        )}
       </div>
-    </div>
+    </section>
   );
 }

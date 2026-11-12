@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ArticleCard({ article }) {
+  const { tCategory } = useLanguage();
+
   return (
     <Link
       to={`/article/${article.slug}`}
@@ -13,7 +16,7 @@ export default function ArticleCard({ article }) {
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
           <span className="text-brand-blue dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
-            {article.category}
+            {tCategory(article.categoryId, article.category)}
           </span>
           <h3 className="font-serif text-lg font-bold text-gray-900 dark:text-white mt-1.5 mb-2 leading-snug group-hover:text-brand-blue dark:group-hover:text-blue-400 transition-colors">
             {article.title}
@@ -23,7 +26,10 @@ export default function ArticleCard({ article }) {
           </p>
         </div>
         <span className="block text-gray-500 text-[11px] mt-4">
-          {article.date} · {article.readTime}
+          <time dateTime={article.publishedAt} title={article.date}>
+            {article.timeAgo || article.date}
+          </time>
+          {article.readTime ? ` · ${article.readTime}` : ''}
         </span>
       </div>
     </Link>

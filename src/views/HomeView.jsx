@@ -1,19 +1,25 @@
 import { Link } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import BreakingTicker from '../components/BreakingTicker';
-import { ARTICLES } from '../data/newsData';
+import usePostList from '../hooks/usePostList';
+import RequestState from '../components/RequestState';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function HomeView() {
+  const { t } = useLanguage();
+  const { posts: ARTICLES, loading, error, retry } = usePostList({ homepage: true });
   const [leadArticle, ...otherArticles] = ARTICLES;
   const sideArticles = otherArticles.slice(0, 3);
 
+  if (loading || error) return <RequestState loading={loading} error={error} onRetry={retry} />;
+
   if (!leadArticle) {
-    return <p className="max-w-[1180px] mx-auto px-4 py-12 text-gray-500">No stories are available right now.</p>;
+    return <p className="max-w-[1180px] mx-auto px-4 py-12 text-gray-500">{t('noStories')}</p>;
   }
 
   return (
     <>
-      <BreakingTicker />
+      <BreakingTicker articles={ARTICLES} />
       <div className="max-w-[1180px] mx-auto px-4 py-8">
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <Link to={`/article/${leadArticle.slug}`} className="lg:col-span-2 group">
@@ -30,7 +36,12 @@ export default function HomeView() {
             <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-3">
               {leadArticle.subtitle}
             </p>
-            <span className="text-xs text-gray-400">{leadArticle.date} · {leadArticle.readTime}</span>
+            <span className="text-xs text-gray-400">
+              <time dateTime={leadArticle.publishedAt} title={leadArticle.date}>
+                {leadArticle.timeAgo || leadArticle.date}
+              </time>
+              {leadArticle.readTime ? ` · ${leadArticle.readTime}` : ''}
+            </span>
           </Link>
 
           <div className="flex flex-col gap-5 divide-y divide-gray-200 dark:divide-brand-darkBorder">
@@ -51,7 +62,11 @@ export default function HomeView() {
                   <span className="block font-serif text-sm font-bold text-gray-900 dark:text-white leading-snug mt-1 group-hover:text-brand-blue dark:group-hover:text-blue-400">
                     {article.title}
                   </span>
-                  <span className="text-[11px] text-gray-400 mt-1 block">{article.date}</span>
+                  <span className="text-[11px] text-gray-400 mt-1 block">
+                    <time dateTime={article.publishedAt} title={article.date}>
+                      {article.timeAgo || article.date}
+                    </time>
+                  </span>
                 </span>
               </Link>
             ))}
@@ -61,10 +76,10 @@ export default function HomeView() {
         <section className="mb-14">
           <div className="flex items-center justify-between border-b-2 border-brand-blue pb-2 mb-6">
             <h2 className="font-serif text-2xl font-bold text-gray-900 dark:text-white">
-              Dispatches &amp; Field Reports
+              {t('dispatches')}
             </h2>
             <Link to="/category/latest" className="text-brand-blue dark:text-blue-400 text-xs font-bold hover:underline">
-              View All →
+              {t('viewAll')}
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -74,18 +89,6 @@ export default function HomeView() {
           </div>
         </section>
 
-        <section className="bg-gradient-to-br from-brand-blue to-slate-900 text-white rounded-xl p-8 sm:p-12 text-center mb-10">
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-2">The Weekly Monitor</h2>
-          <p className="text-sm opacity-90 max-w-xl mx-auto mb-6">
-            Verified court updates, independent investigation, and human rights briefings in your inbox every Friday.
-          </p>
-          <Link
-            to="/newsletter"
-            className="border border-white/40 hover:bg-white/10 px-6 py-2.5 rounded-full text-xs font-bold inline-block"
-          >
-            Read Issue #01 Online Now →
-          </Link>
-        </section>
       </div>
     </>
   );

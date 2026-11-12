@@ -1,63 +1,40 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import ArticleRow from '../components/ArticleRow';
-import { ARTICLES, CATEGORIES } from '../data/newsData';
+import Pagination from '../components/Pagination';
+import RequestState from '../components/RequestState';
+import { usePosts } from '../context/PostsContext';
+import { useLanguage } from '../context/LanguageContext';
+import usePostList from '../hooks/usePostList';
 
-const CATEGORY_MATCHERS = {
-  pakistan: (article) => article.category !== 'World News',
-  world: (article) => article.category === 'World News',
-};
-
-export default function CategoryView() {
-  const { categoryId } = useParams();
-  const category = CATEGORIES.find((item) => item.id === categoryId);
-
-  if (!category) {
-    return (
-      <div className="max-w-[1180px] mx-auto px-4 py-8">
-        <h1 className="font-serif text-3xl font-bold text-gray-900 dark:text-white">Section not found</h1>
-      </div>
-    );
-  }
-
-  const matchesCategory = CATEGORY_MATCHERS[categoryId];
-  const filteredArticles = categoryId === 'latest'
-    ? ARTICLES
-    : ARTICLES.filter((article) => (
-      matchesCategory
-        ? matchesCategory(article)
-        : article.category.toLowerCase().includes(categoryId)
-    ));
+export default function CategoryView({ sectionId }) {
+  const { categoryId: routeCategory } = useParams();
+  const categoryId = sectionId || routeCategory;
+  const [params, setParams] = useSearchParams();
+  const page = Math.max(1, Number(params.get('page')) || 1);
+  const { categories, categoriesLoading, categoriesError, retryCategories } = usePosts();
+  const { t, tCategory } = useLanguage();
+  const { posts, pagination, loading, error, retry } = usePostList({ page, category: categoryId === 'latest' ? undefined : categoryId });
+  const category = categoryId === 'latest' ? { label: t('latestNews') } : categories.find((item) => item.id === categoryId);
+  const categoryTitle = categoryId === 'latest' ? t('latestNews') : tCategory(categoryId, category?.label || 'News');
 
   return (
-    <section className="max-w-[1180px] mx-auto px-4 py-8">
-      <header className="border-b-2 border-brand-blue pb-3 mb-6">
-        <h1 className="font-serif text-3xl font-bold text-gray-900 dark:text-white">
-          {category.label}
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {filteredArticles.length} {filteredArticles.length === 1 ? 'story' : 'stories'}
-        </p>
-      </header>
-
-      {filteredArticles.length > 0 ? (
-        categoryId === 'latest' ? (
-          <div className="divide-y divide-gray-200 dark:divide-brand-darkBorder">
-            {filteredArticles.map((article) => (
-              <ArticleRow key={article.id} article={article} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredArticles.map((article) => (
-              <ArticleCard key={article.id} article={article} />
-            ))}
-          </div>
-        )
-      ) : (
-        <p className="text-center py-12 text-gray-500 dark:text-gray-400">
-          There are no stories in this category yet.
-        </p>
+    <section className="mx-auto max-w-[1180px] px-4 py-8">
+      <RequestState loading={categoriesLoading} error={categoriesError} onRetry={retryCategories} />
+      {!categoriesLoading && !categoriesError && !category ? <h1 className="font-serif text-3xl font-bold">Section not found</h1> : (
+        <>
+          <header className="mb-6 border-b-2 border-brand-blue pb-3">
+            <h1 className="font-serif text-3xl font-bold">{categoryTitle}</h1>
+            {pagination && <p className="mt-1 text-sm text-gray-500">{pagination.total} stories</p>}
+          </header>
+          <RequestState loading={loading} error={error} onRetry={retry} />
+          {!loading && !error && (posts.length ? (
+            <div className={categoryId === 'latest' ? 'divide-y divide-gray-200 dark:divide-brand-darkBorder' : 'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'}>
+              {posts.map((post) => categoryId === 'latest' ? <ArticleRow key={post.id} article={post} /> : <ArticleCard key={post.id} article={post} />)}
+            </div>
+          ) : <p className="py-12 text-center text-gray-500">There are no stories in this category yet.</p>)}
+          <Pagination pagination={pagination} onPageChange={(next) => setParams({ page: String(next) })} />
+        </>
       )}
     </section>
   );
