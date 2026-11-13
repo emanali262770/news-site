@@ -57,7 +57,14 @@ html {
 /* Rich text article renderer styling */
 .article-body {
   word-break: break-word;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.article-body pre,
+.article-body table {
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
 }
 .article-body p {
   margin-bottom: 1.25rem;
