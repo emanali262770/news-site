@@ -62,14 +62,21 @@ export default function ArticleDetailView() {
         </article>
         {related.length > 0 && (
           <aside>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-brand-darkBorder dark:bg-brand-darkCard">
-              <h2 className="mb-4 font-serif font-bold">{t('relatedCoverage')}</h2>
-              <div className="space-y-4">
-                {related.map((post) => (
-                  <Link key={post.id} to={`/article/${post.slug}`} className="block text-sm font-semibold hover:text-brand-blue dark:hover:text-blue-400">
-                    {post.title}
-                    <span className="mt-1 block text-xs font-normal text-gray-500">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-brand-darkBorder dark:bg-brand-darkCard shadow-xs">
+              <h2 className="mb-5 font-serif text-xl font-bold text-gray-900 dark:text-white">{t('relatedCoverage')}</h2>
+              <div className="space-y-5 divide-y divide-gray-200/70 dark:divide-brand-darkBorder">
+                {related.map((post, idx) => (
+                  <Link
+                    key={post.id}
+                    to={`/article/${post.slug}`}
+                    className={`block group transition-colors ${idx > 0 ? 'pt-4' : ''}`}
+                  >
+                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-brand-blue dark:group-hover:text-blue-400 leading-snug">
+                      {post.title}
+                    </h3>
+                    <span className="mt-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
                       <time dateTime={post.publishedAt} title={post.date}>{post.timeAgo || post.date}</time>
+                      {post.readTime ? ` · ${post.readTime}` : ''}
                     </span>
                   </Link>
                 ))}
