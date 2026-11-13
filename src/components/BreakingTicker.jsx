@@ -22,14 +22,14 @@ export default function BreakingTicker({ articles = [] }) {
     >
       <div className="mx-auto flex max-w-[1180px] items-center px-4">
         {/* Pinned Breaking News Badge */}
-        <div className="z-10 flex shrink-0 items-center pr-3">
+        <div className="z-10 flex shrink-0 items-center ltr:pr-3 rtl:pl-3">
           <span className="rounded bg-brand-red px-2 py-0.5 text-[11px] font-bold tracking-wider text-white shadow-sm">
             {t('breakingNews')}
           </span>
         </div>
 
         {/* Continuous Scrolling Ticker */}
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative flex-1 overflow-hidden" dir="ltr">
           <div className="animate-ticker flex w-max items-center whitespace-nowrap text-sm">
             {/* Primary Track */}
             <div className="flex shrink-0 items-center gap-4 pr-4">
