@@ -39,23 +39,9 @@ html {
   }
 }
 
-@keyframes ticker-rtl {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: translate3d(50%, 0, 0);
-  }
-}
-
 .animate-ticker {
   animation: ticker 35s linear infinite;
   will-change: transform;
-}
-
-[dir="rtl"] .animate-ticker {
-  animation-name: ticker-rtl;
 }
 
 .animate-ticker:hover {
