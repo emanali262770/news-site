@@ -38,14 +38,14 @@ export default function ArticleDetailView() {
   const related = (data.relatedPosts || []).map(presentPost);
 
   return (
-    <section className="mx-auto max-w-[1180px] px-4 py-8">
+    <section className="mx-auto max-w-[1180px] px-4 py-8 overflow-hidden">
       <Link to="/" className="mb-6 inline-block text-sm font-semibold text-brand-blue dark:text-blue-400">
         {t('backToHome')}
       </Link>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-        <article className="lg:col-span-2">
+        <article className="lg:col-span-2 min-w-0 break-words">
           <p className="text-xs font-bold uppercase tracking-widest text-brand-blue dark:text-blue-400">{article.category}</p>
-          <h1 className="mb-4 mt-2 font-serif text-3xl font-bold leading-tight sm:text-4xl">{article.title}</h1>
+          <h1 className="mb-4 mt-2 font-serif text-3xl font-bold leading-tight sm:text-4xl break-words">{article.title}</h1>
           <p className="mb-6 text-xs text-gray-500">
             {t('by')} {article.author} &middot;{' '}
             <time dateTime={article.publishedAt} title={article.date}>
@@ -56,7 +56,7 @@ export default function ArticleDetailView() {
           {article.image && <img src={article.image} alt={article.imageAlt || ''} className="mb-3 max-h-[520px] w-full rounded-lg object-cover" />}
           {article.caption && <p className="mb-8 border-b border-gray-200 pb-4 text-xs italic text-gray-500 dark:border-brand-darkBorder">{article.caption}</p>}
           <div
-            className="article-body mt-6 text-base leading-relaxed text-gray-800 sm:text-lg dark:text-gray-200"
+            className="article-body mt-6 text-base leading-relaxed text-gray-800 sm:text-lg dark:text-gray-200 min-w-0"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         </article>
