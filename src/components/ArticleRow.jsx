@@ -15,8 +15,16 @@ export default function ArticleRow({ article }) {
         aria-hidden="true"
       />
       <span className="min-w-0">
-        <span className="text-[10px] text-brand-blue dark:text-blue-400 font-bold uppercase">
-          {tCategory(article.categoryId, article.category)}
+        <span className="inline-flex flex-wrap items-center gap-1 text-[10px] text-brand-blue dark:text-blue-400 font-bold uppercase">
+          {(Array.isArray(article.categories) && article.categories.length > 0
+            ? article.categories
+            : [article.categoryId || article.category]
+          ).filter(Boolean).map((catId, index) => (
+            <span key={`${catId}-${index}`}>
+              {tCategory(catId, catId)}
+              {index < (article.categories?.length || 1) - 1 ? ' ·' : ''}
+            </span>
+          ))}
         </span>
         <span className="block font-serif text-base font-bold text-gray-900 dark:text-white group-hover:text-brand-blue">
           {article.title}

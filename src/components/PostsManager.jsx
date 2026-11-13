@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePosts } from '../context/PostsContext';
 import usePostList from '../hooks/usePostList';
@@ -56,7 +56,18 @@ export default function PostsManager({ onEdit, onDelete, disabled = false }) {
           <thead className="border-y border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:border-brand-darkBorder dark:bg-brand-darkBg"><tr>{['Post', 'Category', 'Status', 'Actions'].map((label) => <th key={label} scope="col" className="px-5 py-3">{label}</th>)}</tr></thead>
           <tbody className="divide-y divide-gray-100 dark:divide-brand-darkBorder">{posts.map((post) => <tr key={post.id}>
             <th scope="row" className="max-w-md px-5 py-4 font-semibold"><span className="line-clamp-2">{post.title}</span><span className="mt-1 block text-xs font-normal text-gray-500">{post.author}</span></th>
-            <td className="px-5 py-4">{categories.find((category) => category.id === post.categoryId)?.label || post.categoryId}</td>
+            <td className="px-5 py-4">
+              <div className="flex flex-wrap gap-1">
+                {(Array.isArray(post.categories) && post.categories.length > 0
+                  ? post.categories
+                  : (post.categoryId ? [post.categoryId] : [])
+                ).map((catId) => (
+                  <span key={catId} className="inline-block rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs">
+                    {categories.find((c) => c.id === catId)?.label || catId}
+                  </span>
+                ))}
+              </div>
+            </td>
             <td className="px-5 py-4"><span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-950 dark:text-green-300">Published</span></td>
             <td className="px-5 py-4"><div className="flex items-center gap-1"><button type="button" disabled={locked} className={`${actionClass} text-brand-blue dark:text-blue-400`} onClick={() => onEdit(post)}>Edit</button><Link to={`/article/${post.slug}`} className={`${actionClass} text-brand-blue dark:text-blue-400`}>View</Link><button type="button" disabled={locked} className={`${actionClass} text-red-600 dark:text-red-400`} onClick={() => { setPending(post); setError(''); }}>Delete</button></div></td>
           </tr>)}</tbody>

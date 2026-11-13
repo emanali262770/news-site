@@ -15,9 +15,20 @@ export default function ArticleCard({ article }) {
       />
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          <span className="text-brand-blue dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
-            {tCategory(article.categoryId, article.category)}
-          </span>
+          <div className="flex flex-wrap items-center gap-1.5 mb-1">
+            {(Array.isArray(article.categories) && article.categories.length > 0
+              ? article.categories
+              : [article.categoryId || article.category]
+            ).filter(Boolean).map((catId, index) => (
+              <span
+                key={`${catId}-${index}`}
+                className="text-brand-blue dark:text-blue-400 text-[11px] font-bold uppercase tracking-wider"
+              >
+                {tCategory(catId, catId)}
+                {index < (article.categories?.length || 1) - 1 ? ' ·' : ''}
+              </span>
+            ))}
+          </div>
           <h3 className="font-serif text-lg font-bold text-gray-900 dark:text-white mt-1.5 mb-2 leading-snug group-hover:text-brand-blue dark:group-hover:text-blue-400 transition-colors">
             {article.title}
           </h3>

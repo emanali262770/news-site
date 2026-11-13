@@ -44,7 +44,19 @@ export default function ArticleDetailView() {
       </Link>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
         <article className="lg:col-span-2 min-w-0 break-words">
-          <p className="text-xs font-bold uppercase tracking-widest text-brand-blue dark:text-blue-400">{article.category}</p>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            {(Array.isArray(article.categories) && article.categories.length > 0
+              ? article.categories
+              : [article.categoryId || article.category]
+            ).filter(Boolean).map((catId, index) => (
+              <span
+                key={`${catId}-${index}`}
+                className="text-xs font-bold uppercase tracking-widest text-brand-blue dark:text-blue-400 bg-brand-blue/10 dark:bg-brand-blue/20 px-2 py-0.5 rounded"
+              >
+                {catId}
+              </span>
+            ))}
+          </div>
           <h1 className="mb-4 mt-2 font-serif text-3xl font-bold leading-tight sm:text-4xl break-words">{article.title}</h1>
           <p className="mb-6 text-xs text-gray-500">
             {t('by')} {article.author} &middot;{' '}

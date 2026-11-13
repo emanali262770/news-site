@@ -95,10 +95,19 @@ export function formatTimeAgo(dateInput, now = new Date()) {
 
 export function presentPost(post) {
   const publishedDate = post?.publishedAt || post?.createdAt;
+  const categoriesList = Array.isArray(post?.categories) && post.categories.length > 0
+    ? post.categories
+    : (Array.isArray(post?.categoryIds) && post.categoryIds.length > 0
+      ? post.categoryIds
+      : (post?.categoryId ? [post.categoryId] : []));
+
   return {
     ...post,
     image: imageUrl(post?.image),
-    category: post?.topic || post?.categoryId,
+    categories: categoriesList,
+    categoryIds: categoriesList,
+    categoryId: post?.categoryId || categoriesList[0] || '',
+    category: post?.topic || categoriesList[0] || post?.categoryId,
     date: publishedDate ? new Intl.DateTimeFormat('en-US', {
       dateStyle: 'long', timeZone: 'Asia/Karachi',
     }).format(new Date(publishedDate)) : '',

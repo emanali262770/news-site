@@ -8,7 +8,7 @@ import RequestState from '../components/RequestState';
 import { usePosts } from '../context/PostsContext';
 import PostsManager from '../components/PostsManager';
 
-const emptyForm = { title: '', categoryId: '', topic: '', subtitle: '', imageId: '', imageAlt: '', caption: '', author: 'Admin', content: '', showOnHomepage: false };
+const emptyForm = { title: '', categoryId: '', categoryIds: [], topic: '', subtitle: '', imageId: '', imageAlt: '', caption: '', author: 'Admin', content: '', showOnHomepage: false };
 const control = 'mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 dark:border-brand-darkBorder dark:bg-brand-darkBg';
 const button = 'rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-blue dark:border-brand-darkBorder dark:hover:bg-brand-darkBg disabled:opacity-50';
 
@@ -116,10 +116,27 @@ export default function AdminDashboardView() {
   function resetForm() {
     requestRef.current?.abort();
     setImageLoading(false);
-    setForm({ ...emptyForm, author: admin.name || 'Admin' });
+    setForm({ ...emptyForm, author: admin.name || 'Admin', categoryIds: [] });
     setImagePreview('');
     setEditing(null);
     if (fileRef.current) fileRef.current.value = '';
+  }
+
+  function toggleCategory(catId) {
+    setForm((prev) => {
+      const current = Array.isArray(prev.categoryIds) && prev.categoryIds.length > 0
+        ? prev.categoryIds
+        : (prev.categoryId ? [prev.categoryId] : []);
+      const exists = current.includes(catId);
+      const nextCategories = exists
+        ? current.filter((id) => id !== catId)
+        : [...current, catId];
+      return {
+        ...prev,
+        categoryIds: nextCategories,
+        categoryId: nextCategories[0] || '',
+      };
+    });
   }
 
   async function editPost(post) {
@@ -133,6 +150,13 @@ export default function AdminDashboardView() {
       const detail = await api('/posts/' + encodeURIComponent(post.slug), { signal: controller.signal });
       if (controller.signal.aborted) return;
       const fields = Object.fromEntries(Object.entries(emptyForm).map(([key, fallback]) => [key, detail[key] ?? fallback]));
+      const catList = Array.isArray(detail.categories) && detail.categories.length > 0
+        ? detail.categories
+        : (Array.isArray(detail.categoryIds) && detail.categoryIds.length > 0
+          ? detail.categoryIds
+          : (detail.categoryId ? [detail.categoryId] : []));
+      fields.categoryIds = catList;
+      fields.categoryId = detail.categoryId || catList[0] || '';
       setForm(fields);
       setImagePreview(imageUrl(detail.image));
       setEditing(detail.id);
@@ -193,8 +217,38 @@ export default function AdminDashboardView() {
           <h2 className="mb-6 text-xl font-semibold">{editing ? 'Edit post' : 'Create a post'}</h2>
           <fieldset disabled={busy} className="grid gap-6 md:grid-cols-2">
             <label className="text-sm font-semibold md:col-span-2">Title *<input name="title" value={form.title} onChange={update} maxLength={250} className={control} placeholder="Enter the headline" /></label>
-            <label className="text-sm font-semibold">Category *<select name="categoryId" value={form.categoryId} onChange={update} className={control}><option value="">Select a category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}</select></label>
-            <label className="text-sm font-semibold">Topic label <span className="font-normal text-gray-500">(optional)</span><input name="topic" value={form.topic} onChange={update} className={control} placeholder="e.g. Family Law Reform" /></label>
+            <div className="md:col-span-2">
+              <label className="text-sm font-semibold mb-2 block">
+                Categories * <span className="text-xs font-normal text-gray-500">(Select one or multiple)</span>
+              </label>
+              <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-gray-300 dark:border-brand-darkBorder bg-gray-50/50 dark:bg-brand-darkBg/50">
+                {categories.map((category) => {
+                  const selectedList = Array.isArray(form.categoryIds) && form.categoryIds.length > 0
+                    ? form.categoryIds
+                    : (form.categoryId ? [form.categoryId] : []);
+                  const isChecked = selectedList.includes(category.id);
+                  return (
+                    <button
+                      type="button"
+                      key={category.id}
+                      onClick={() => toggleCategory(category.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border ${
+                        isChecked
+                          ? 'bg-brand-blue text-white border-brand-blue shadow-xs'
+                          : 'bg-white dark:bg-brand-darkCard text-gray-700 dark:text-gray-300 border-gray-300 dark:border-brand-darkBorder hover:border-brand-blue'
+                      }`}
+                    >
+                      {isChecked ? '✓ ' : '+ '}
+                      {category.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {(!form.categoryId && (!form.categoryIds || form.categoryIds.length === 0)) && (
+                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Please select at least one category.</p>
+              )}
+            </div>
+            <label className="text-sm font-semibold md:col-span-2">Topic label <span className="font-normal text-gray-500">(optional)</span><input name="topic" value={form.topic} onChange={update} className={control} placeholder="e.g. Family Law Reform" /></label>
             <label className="text-sm font-semibold md:col-span-2">Short summary *<textarea name="subtitle" value={form.subtitle} onChange={update} rows={3} className={control} placeholder="A short introduction for news cards" /></label>
             <div className="md:col-span-2"><label className="text-sm font-semibold">Featured image *<input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} className={control} /></label><p className="mt-2 text-xs text-gray-500">JPG, PNG or WebP. Maximum 1 MiB.</p>{imageLoading && <p role="status">Uploading image...</p>}{imagePreview && <img src={imagePreview} alt="Selected featured image preview" className="mt-4 max-h-52 rounded-lg object-contain" />}</div>
             <label className="text-sm font-semibold">Image description (alt text) (optional)<input name="imageAlt" value={form.imageAlt} onChange={update} className={control} /></label>
