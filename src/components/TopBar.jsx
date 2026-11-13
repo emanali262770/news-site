@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function TopBar() {
   const { theme, toggleTheme } = useTheme();
   const { currentLang, setLanguage, languages, t } = useLanguage();
+  const { admin, logout } = useAuth();
+  const navigate = useNavigate();
   const [langOpen, setLangOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -18,6 +22,18 @@ export default function TopBar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   const currentDate = new Intl.DateTimeFormat(currentLang.locale || 'en-US', {
     weekday: 'long',
@@ -76,12 +92,31 @@ export default function TopBar() {
             {theme === 'dark' ? t('themeLight') : t('themeDark')}
           </button>
 
-          <Link
-            to="/login"
-            className="rounded-full bg-brand-blue px-4 py-1 font-semibold text-white hover:bg-brand-blue/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
-          >
-            {t('login')}
-          </Link>
+          {admin ? (
+            <div className="flex items-center gap-2">
+              <Link
+                to="/admin"
+                className="rounded-full bg-brand-blue px-3.5 py-1 font-semibold text-white hover:bg-brand-blue/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
+              >
+                Admin
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="rounded-full border border-gray-300 dark:border-brand-darkBorder px-3 py-1 font-semibold text-gray-700 dark:text-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+              >
+                {loggingOut ? '...' : 'Logout'}
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="rounded-full bg-brand-blue px-4 py-1 font-semibold text-white hover:bg-brand-blue/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
+            >
+              {t('login')}
+            </Link>
+          )}
         </div>
       </div>
     </div>

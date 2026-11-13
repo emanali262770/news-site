@@ -55,7 +55,10 @@ export default function ArticleDetailView() {
           </p>
           {article.image && <img src={article.image} alt={article.imageAlt || ''} className="mb-3 max-h-[520px] w-full rounded-lg object-cover" />}
           {article.caption && <p className="mb-8 border-b border-gray-200 pb-4 text-xs italic text-gray-500 dark:border-brand-darkBorder">{article.caption}</p>}
-          <div className="mt-6 whitespace-pre-wrap text-base leading-relaxed text-gray-800 sm:text-lg dark:text-gray-200">{article.content}</div>
+          <div
+            className="article-body mt-6 text-base leading-relaxed text-gray-800 sm:text-lg dark:text-gray-200"
+            dangerouslySetInnerHTML={{ __html: article.content }}
+          />
         </article>
         {related.length > 0 && (
           <aside>

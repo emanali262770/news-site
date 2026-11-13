@@ -1,5 +1,7 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { api, imageUrl } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import RequestState from '../components/RequestState';
@@ -24,6 +26,60 @@ export default function AdminDashboardView() {
   useEffect(() => () => requestRef.current?.abort(), []);
   const fileRef = useRef(null);
   const editorRef = useRef(null);
+  const quillRef = useRef(null);
+
+  const imageHandler = () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/jpeg,image/png,image/webp');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) {
+        setError('Choose a JPG, PNG or WebP inline image up to 2 MiB.');
+        return;
+      }
+
+      const body = new FormData();
+      body.append('image', file);
+
+      try {
+        setError('');
+        const uploaded = await api('/uploads/images', { method: 'POST', body });
+        const quill = quillRef.current?.getEditor();
+        if (quill && uploaded?.url) {
+          const range = quill.getSelection(true);
+          const fullImgUrl = imageUrl(uploaded.url);
+          quill.insertEmbed(range.index, 'image', fullImgUrl);
+          quill.setSelection(range.index + 1);
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to upload inline image');
+      }
+    };
+  };
+
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, 4, false] }],
+        [{ size: ['small', false, 'large', 'huge'] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['blockquote', 'code-block'],
+        ['link', 'image'],
+        ['clean'],
+      ],
+      handlers: {
+        image: imageHandler,
+      },
+    },
+  }), []);
 
   function update(event) {
     const { name, value, checked, type } = event.target;
@@ -142,9 +198,25 @@ export default function AdminDashboardView() {
             <label className="text-sm font-semibold md:col-span-2">Short summary *<textarea name="subtitle" value={form.subtitle} onChange={update} rows={3} className={control} placeholder="A short introduction for news cards" /></label>
             <div className="md:col-span-2"><label className="text-sm font-semibold">Featured image *<input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} className={control} /></label><p className="mt-2 text-xs text-gray-500">JPG, PNG or WebP. Maximum 1 MiB.</p>{imageLoading && <p role="status">Uploading image...</p>}{imagePreview && <img src={imagePreview} alt="Selected featured image preview" className="mt-4 max-h-52 rounded-lg object-contain" />}</div>
             <label className="text-sm font-semibold">Image description (alt text) (optional)<input name="imageAlt" value={form.imageAlt} onChange={update} className={control} /></label>
-            <label className="text-sm font-semibold">Image caption / credit<input name="caption" value={form.caption} onChange={update} className={control} /></label>
+            <label className="text-sm font-semibold">Image caption / credit (optional)<input name="caption" value={form.caption} onChange={update} className={control} /></label>
             <label className="text-sm font-semibold md:col-span-2">Author / Byline *<input name="author" value={form.author} onChange={update} className={control} /></label>
-            <div className="md:col-span-2"><label htmlFor="post-content" className="text-sm font-semibold">Article content *</label><textarea id="post-content" name="content" value={form.content} onChange={update} rows={12} className={control} aria-describedby="content-help" placeholder="Write your article..." /><p id="content-help" className="mt-2 text-xs text-gray-500">Separate paragraphs with a blank line.</p></div>
+            <div className="md:col-span-2">
+              <label className="text-sm font-semibold mb-1 block">Article content *</label>
+              <div className="rich-editor-wrapper bg-white text-gray-900 rounded-lg border border-gray-300 dark:border-brand-darkBorder overflow-hidden">
+                <ReactQuill
+                  ref={quillRef}
+                  theme="snow"
+                  value={form.content}
+                  onChange={(content) => setForm((prev) => ({ ...prev, content }))}
+                  modules={modules}
+                  placeholder="Write your article with headings, colors, formatting and inline images..."
+                  className="min-h-[280px]"
+                />
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                Format headings, bold/italic, change font size & color, add links, lists and insert images anywhere inside the article.
+              </p>
+            </div>
             <label className="flex items-center gap-3 text-sm md:col-span-2"><input type="checkbox" name="showOnHomepage" checked={form.showOnHomepage} onChange={update} className="size-4 accent-brand-blue" />Show on homepage</label>
           </fieldset>
           <div className="mt-8 flex flex-wrap gap-3 border-t border-gray-200 pt-6 dark:border-brand-darkBorder">
