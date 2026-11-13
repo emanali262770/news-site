@@ -46,6 +46,8 @@ export default function App() {
               <Route path="/" element={<Layout />}>
                 <Route index element={<HomeView />} />
                 <Route path="article/:slug" element={<ArticleDetailView />} />
+                <Route path="post/:slug" element={<ArticleDetailView />} />
+                <Route path="posts/:slug" element={<ArticleDetailView />} />
                 <Route path="category/articles" element={<ArticlesView />} />
                 <Route path="category/:categoryId" element={<CategoryView />} />
                 <Route path="search" element={<SearchView />} />
