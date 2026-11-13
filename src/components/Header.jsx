@@ -9,9 +9,6 @@ export default function Header() {
           alt="Christian Monitor News"
           className="mx-auto max-h-24 sm:max-h-32 w-auto object-contain"
         />
-        <p className="text-gray-500 dark:text-gray-400 tracking-[2px] uppercase text-xs sm:text-sm font-semibold mt-2">
-          Voice of Oppressed
-        </p>
       </Link>
     </header>
   );
