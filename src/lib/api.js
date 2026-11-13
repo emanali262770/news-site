@@ -56,6 +56,13 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
   }
 }
 
+export async function subscribeNewsletter(email) {
+  return api('/newsletter/subscribe', {
+    method: 'POST',
+    body: { email },
+  });
+}
+
 export function imageUrl(path) {
   return path ? new URL(path, `${apiUrl}/`).href : '';
 }
